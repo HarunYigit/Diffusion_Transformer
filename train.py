@@ -28,18 +28,13 @@ class CustomDataset(Dataset):
         if self.transform:
             input_image = self.transform(input_image)
             output_image = self.transform(output_image)
-    
-        # Görüntüleri PyTorch Tensor'larına dönüştürün
-        input_image = torch.from_numpy(input_image)
-        output_image = torch.from_numpy(output_image)
-    
         return input_image, output_image
 
 
 # Örnek bir dönüştürme fonksiyonu tanımla (boyutları ayarla, normalleştirme yap vb.)
 transform = transforms.Compose([
-    transforms.Resize((256, 256)),
     transforms.ToTensor(),
+    transforms.Resize((256, 256)),
 ])
 
 # Veri kümesi ve veri yükleyici oluştur
