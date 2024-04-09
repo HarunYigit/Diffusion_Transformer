@@ -48,51 +48,41 @@ class PositionalEncoding(nn.Module):
         """
         x = x + self.pe[:x.size(0)]
         return self.dropout(x)
+
 class DiffusionTransformer(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_layers: int, num_heads: int, dropout: float = 0.1):
-        super(DiffusionTransformer, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.num_heads = num_heads
-
-        # Encoder layers
-        encoder_layer = nn.TransformerEncoderLayer(hidden_size, num_heads)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
-
-        # Positional encoding
-        self.positional_encoding = PositionalEncoding(hidden_size, dropout)
-
-        # Embedding layer
-        self.embedding = nn.Linear(input_size, hidden_size)
-
-        # Output layer
-        self.output_layer = nn.Linear(hidden_size, input_size)
+    def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
+                 nlayers: int, dropout: float = 0.5):
+        super().__init__()
+        self.pos_encoder = PositionalEncoding(d_model, dropout)
+        encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
+        self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
+        self.embedding = nn.Embedding(ntoken, d_model)
+        self.d_model = d_model
+        self.linear = nn.Linear(d_model, ntoken)
 
         self.init_weights()
 
-    def init_weights(self):
-        # Initialize weights and biases
-        nn.init.xavier_uniform_(self.embedding.weight)
-        nn.init.xavier_uniform_(self.output_layer.weight)
-        nn.init.constant_(self.output_layer.bias, 0)
+    def init_weights(self) -> None:
+        initrange = 0.1
+        self.embedding.weight.data.uniform_(-initrange, initrange)
+        self.linear.bias.data.zero_()
+        self.linear.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, src: Tensor, mask: Tensor = None) -> Tensor:
-        # Apply embedding and positional encoding
-        src = self.embedding(src) * math.sqrt(self.hidden_size)
-        src = self.positional_encoding(src)
 
-        # Apply transformer encoder
-        output = self.transformer_encoder(src, mask)
 
-        # Apply output layer
-        output = self.output_layer(output)
+    def forward(self, src: Tensor, src_mask: Tensor = None) -> Tensor:
 
+        src = self.embedding(src.to(torch.long)) * math.sqrt(self.d_model)
+        src = self.pos_encoder(src)
+        if src_mask is None:
+            src_mask = nn.Transformer.generate_square_subsequent_mask(len(src)).to("cpu")
+        output = self.transformer_encoder(src, src_mask)
+        output = self.linear(output)
         return output
     
 img_size =  64*64*3
-hidden_size = 2
+hidden_size = 4
 num_layers =  2
 num_heads = 2 
 dropout =  0.2
-model = DiffusionTransformer(img_size,hidden_size,num_layers,num_heads,dropout).to("cpu")
+model = DiffusionTransformer(img_size,2,num_heads,hidden_size,num_layers,dropout).to("cpu")

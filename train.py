@@ -34,14 +34,14 @@ class CustomDataset(Dataset):
 # Örnek bir dönüştürme fonksiyonu tanımla (boyutları ayarla, normalleştirme yap vb.)
 transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Resize((256, 256)),
+    transforms.Resize((64, 64)),
 ])
 
 # Veri kümesi ve veri yükleyici oluştur
 input_folder = './inputs'
 output_folder = './outputs'
 dataset = CustomDataset(input_folder, output_folder, transform=transform)
-dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
 # Modeli ve kayıp fonksiyonunu tanımla
 model = model.model
