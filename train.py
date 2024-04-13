@@ -34,14 +34,15 @@ class CustomDataset(Dataset):
 # Örnek bir dönüştürme fonksiyonu tanımla (boyutları ayarla, normalleştirme yap vb.)
 transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Resize((64, 64)),
+    transforms.Resize((64, 64),antialias=True),
+    # transforms.Lambda(lambda x: torch.flatten(x)),
 ])
 
 # Veri kümesi ve veri yükleyici oluştur
 input_folder = './inputs'
 output_folder = './outputs'
 dataset = CustomDataset(input_folder, output_folder, transform=transform)
-dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
 # Modeli ve kayıp fonksiyonunu tanımla
 model = model.model
@@ -56,6 +57,7 @@ for epoch in range(num_epochs):
     for inputs, targets in dataloader:
         optimizer.zero_grad()
         outputs = model(inputs)
+        # print("targets_outputs:",targets.shape,outputs.shape   )
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()

@@ -39,21 +39,21 @@ class PositionalEncoding(nn.Module):
         pe = torch.zeros(max_len, 1, d_model)
         pe[:, 0, 0::2] = torch.sin(position * div_term)
         pe[:, 0, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe)
+        self.pe = pe
 
     def forward(self, x: Tensor) -> Tensor:
         """
         Arguments:
             x: Tensor, shape ``[seq_len, batch_size, embedding_dim]``
         """
-        x = x + self.pe[:x.size(0)]
+        x = x + self.pe
         return self.dropout(x)
 
 class DiffusionTransformer(nn.Module):
     def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
                  nlayers: int, dropout: float = 0.5):
         super().__init__()
-        self.pos_encoder = PositionalEncoding(d_model, dropout)
+        self.pos_encoder = PositionalEncoding(d_model,dropout,max_len=ntoken)
         encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
         self.embedding = nn.Embedding(ntoken, d_model)
@@ -71,7 +71,6 @@ class DiffusionTransformer(nn.Module):
 
 
     def forward(self, src: Tensor, src_mask: Tensor = None) -> Tensor:
-
         src = self.embedding(src.to(torch.long)) * math.sqrt(self.d_model)
         src = self.pos_encoder(src)
         if src_mask is None:
@@ -81,8 +80,10 @@ class DiffusionTransformer(nn.Module):
         return output
     
 img_size =  64*64*3
-hidden_size = 4
-num_layers =  2
+hidden_size = 1
+num_layers =  1
 num_heads = 2 
-dropout =  0.2
-model = DiffusionTransformer(img_size,2,num_heads,hidden_size,num_layers,dropout).to("cpu")
+dropout =  0.5
+d_model = 2
+model = DiffusionTransformer(img_size,d_model,num_heads,hidden_size,num_layers,dropout).to("cpu")
+print(model.pos_encoder.pe.shape)
