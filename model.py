@@ -2,23 +2,6 @@ import torch
 import cv2
 import numpy as np
 
-def add_noise(image, noise_level=0.1, num_iterations=2):
-    noisy_image = image.clone()  # Giriş görüntüsünü kopyala
-
-    for _ in range(num_iterations):
-        noise = torch.randn_like(image) * noise_level 
-        noisy_image += noise  
-
-    return noisy_image
-
-image = cv2.imread('1.jpg')
-
-image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-image_tensor = torch.from_numpy(image_rgb.transpose((2, 0, 1))).float()
-
-noisy_image = add_noise(image_tensor, noise_level=0.1, num_iterations=2)
-
 
 import math
 import os
@@ -46,7 +29,13 @@ class PositionalEncoding(nn.Module):
         Arguments:
             x: Tensor, shape ``[seq_len, batch_size, embedding_dim]``
         """
-        x = x + self.pe
+
+        last_shape = x.shape
+        x = torch.flatten(x)
+        x += torch.flatten(self.pe)
+        # print("x",x.shape)
+        x = torch.reshape(x,last_shape)
+        # print("x1",x.shape)
         return self.dropout(x)
 
 class DiffusionTransformer(nn.Module):
@@ -58,7 +47,7 @@ class DiffusionTransformer(nn.Module):
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
         self.embedding = nn.Embedding(ntoken, d_model)
         self.d_model = d_model
-        self.linear = nn.Linear(d_model, ntoken)
+        self.linear = nn.Linear(ntoken * d_model, ntoken)
 
         self.init_weights()
 
@@ -75,15 +64,20 @@ class DiffusionTransformer(nn.Module):
         src = self.pos_encoder(src)
         if src_mask is None:
             src_mask = nn.Transformer.generate_square_subsequent_mask(len(src)).to("cpu")
+        # print(src.shape)
+        src = src.squeeze(0)
+        # print(src.shape)
         output = self.transformer_encoder(src, src_mask)
+        output = torch.flatten(output)
+        # print(output.shape)
         output = self.linear(output)
         return output
     
-img_size =  64*64*3
+img_size =  28*28
 hidden_size = 1
 num_layers =  1
-num_heads = 2 
-dropout =  0.5
+num_heads = 2
+dropout =  0.35
 d_model = 2
 model = DiffusionTransformer(img_size,d_model,num_heads,hidden_size,num_layers,dropout).to("cpu")
-print(model.pos_encoder.pe.shape)
+# print(model.pos_encoder.pe.shape)

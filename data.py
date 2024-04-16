@@ -2,8 +2,8 @@ import cv2
 import os
 
 # Giriş ve çıkış klasörlerini tanımlayın
-input_folder = "./a"
-output_folder = "./b"
+input_folder = "./outputs"
+output_folder = "./inputs"
 
 # Giriş klasöründeki resimleri dolaşın
 for filename in os.listdir(input_folder):
