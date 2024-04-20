@@ -8,42 +8,37 @@ import os
 import model
 import torchvision.transforms as transforms
 import numpy as np
-import random
-from utils import generate_noise_image,flatten_image,reshape
-
+import json
+from utils import generate_noise_image,flatten_image,reshape,get_test_batch
+config = json.load(open("config.json"))
+batch_size = config['batch_size']
+img_size = config['img_size']
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = model.model
 model.load_state_dict(torch.load("input_diffusion_model.pth"))
+model = model.to('cpu')
 model.eval()
-first_image = generate_noise_image(64,64) * 255
-first_image = first_image.astype(np.uint8)
-print(first_image)
-# cv2.imshow("random_image",cv2.resize(first_image,(280,280)))
-# cv2.waitKey(0)
-# first_image = cv2.cvtColor(first_image,cv2.COLOR_BGR2GRAY)
-cv2.imwrite("test_noise.jpg",first_image)
-first_image = flatten_image(first_image)
-first_image = torch.from_numpy(first_image).to("cuda")
-output_image = model(first_image)
-output_image = output_image.to("cpu").detach().numpy() 
-output_image = reshape(output_image)*255
-for i in range(75):
-    # print(first_image[0:5])
-    first_image = model(first_image).to("cpu")
-    first_image = first_image.detach().numpy() * 255
-    first_image = first_image.astype(np.uint8)
-    show_image = reshape(first_image)
-    first_image = torch.from_numpy(first_image).to("cuda")
-    # print("2:",first_image[0:5],show_image[0:5])
-    show_image = cv2.resize(show_image,(280,280))
-    # cv2.imshow("show_image",show_image.astype(np.uint8))
-    # cv2.waitKey(0)
-    # first_image = add_percentage_noise(first_image.detach().numpy(),0.01).astype(np.float64)
-    # first_image = torch.from_numpy(first_image)
-print(output_image[0][0:5])
-first_image = first_image.to("cpu").detach().numpy()
-first_image = reshape(first_image)
-# print(output_image)
-cv2.imwrite("test_75.jpg",first_image)
-cv2.imwrite("test.jpg",output_image)
-print("Resim kaydedildi.")
+# test_inputs = get_test_batch(batch_size).to('cpu')
+   
+# test_inputs = model(test_inputs) * 255
+# test_inputs = test_inputs.to(torch.long)
+# for reshape_index,i in enumerate(test_inputs):
+
+#     reshape_image = reshape(i)
+#     cv2.imwrite(f"test_manuel/test_{reshape_index}.jpg",cv2.resize(reshape_image,(280,280)))
+
+# test_inputs =[]
+# for i in os.listdir("test_manuel"):
+#     img = cv2.imread("test_manuel/" + i)
+#     img = cv2.resize(img,(img_size,img_size))
+#     img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+#     img = flatten_image(img)
+#     test_inputs.append(img)
+# test_inputs= torch.tensor(test_inputs).to(torch.long)
+# test_inputs = model(test_inputs) * 255
+# test_inputs= test_inputs.to(torch.long)
+# for reshape_index,i in enumerate(test_inputs):
+#      reshape_image = reshape(i)
+#      print(reshape_index,"kaydedildi")
+#      cv2.imwrite(f"test_manuel/test_{reshape_index}.jpg",cv2.resize(reshape_image,(img_size,img_size)))

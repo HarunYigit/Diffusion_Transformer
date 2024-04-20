@@ -3,16 +3,15 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import os
+from torch.utils.data import random_split
 from utils import flatten_image,preprocess_image,split_image_into_patches
 import numpy as np
 import json
 class CustomDataset(Dataset):
-    def __init__(self, input_folder,  transform=None, noise_level=0.1, num_iterations=2):
+    def __init__(self, input_folder,  transform=None):
         self.input_folder = input_folder
         self.input_files = os.listdir(input_folder)
         self.transform = transform
-        self.noise_level = noise_level
-        self.num_iterations = num_iterations
 
     def __len__(self):
         return len(self.input_files)
@@ -34,7 +33,17 @@ class CustomDataset(Dataset):
 
 # Veri kümesi ve veri yükleyici oluştur
 input_folder = '.\\inputs'
-dataset = CustomDataset(input_folder)
 config = json.load(open("config.json"))
 batch_size= config['batch_size']
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+dataset = CustomDataset(input_folder)
+
+# Veri setini train ve test olarak ayır
+train_size = int(0.8 * len(dataset))  # %80 train, %20 test
+test_size = len(dataset) - train_size
+train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+
+# Dataloaders oluştur
+train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+print("Train size:",len(train_dataloader) * batch_size)
+print("Test size:",len(test_dataloader) * batch_size)

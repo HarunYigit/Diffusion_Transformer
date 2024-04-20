@@ -39,6 +39,7 @@ class DiffusionTransformer(nn.Module):
         encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout).to(device)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers).to(device)
         self.embedding = nn.Embedding(ntoken, d_model).to(device)
+        print("ntoken:",ntoken)
         self.d_model = d_model
         self.batch_size = batch_size
         self.ntoken = ntoken
@@ -76,7 +77,7 @@ class DiffusionTransformer(nn.Module):
         src = None
         output = output.permute(1, 0, 2)
         output  = torch.flatten(output, start_dim=1)  
-        output = output.view(self.batch_size, -1)
+        output = output.view(output.shape[0], -1)
         output = self.linear(output)
         return output
 

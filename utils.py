@@ -3,6 +3,9 @@ import os
 import cv2
 import numpy as np
 import random
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def add_percentage_noise(image, noise_percentage=0.1):
     """
     image: Gürültü eklenecek olan giriş görüntüsü (numpy array)
@@ -75,7 +78,14 @@ def split_image_into_patches(image, patch_size=(4, 4)):
             patch = image[y:y+patch_height, x:x+patch_width]
             patches.append(patch)
     return patches
-
+def get_test_batch(batch_size):
+    noises = []
+    for i in range(batch_size):
+        first_image = generate_noise_image(img_size,img_size) * 255
+        first_image = flatten_image(first_image)
+      #  first_image = torch.from_numpy(first_image).to(device).to(torch.long)
+        noises.append(first_image)
+    return torch.tensor(noises).to(device).to(torch.long)
 config = json.load(open("config.json"))
 epoch = config['epoch']
 img_size = config['img_size']

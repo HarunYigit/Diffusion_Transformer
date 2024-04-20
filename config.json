@@ -1,11 +1,12 @@
 {
-    "batch_size":8,
-    "img_size":32,
+    "batch_size":32,
+    "img_size":64,
     "hidden_size":128,
-    "num_layers":6,
-    "num_heads":4,
-    "d_model":4,
-    "dropout":0.4,
+    "num_layers":2,
+    "num_heads":1,
+    "d_model":1,
+    "dropout":0.5,
     "epoch":20,
-    "learning_rate":0.00004
+    "learning_rate":0.0001,
+    "diffusion_count":10
 }
